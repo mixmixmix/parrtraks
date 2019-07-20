@@ -4,7 +4,7 @@ This program records from camera. More details: run program without arguments
 import time
 
 import signal
-import cv2, yaml
+import cv2
 import sys, argparse
 import numpy as np
 from datetime import datetime, timedelta
@@ -27,13 +27,19 @@ def main(args):
     print("Name seed is {}".format(name_seed))
 
     camera_input_number = int(args.camera[0])
+    fps = int(args.fps[0])
 
 
     if args.visual:
         cv2.namedWindow("preview")
 
     print("Opening camera input number {}".format(camera_input_number))
+
+
     cap = cv2.VideoCapture(camera_input_number)
+    cap.set(cv2.CAP_PROP_FPS,fps);
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1000);
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH,4000);
     read_fps = cap.get(cv2.CAP_PROP_FPS);
     read_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT);
     read_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH);
@@ -47,7 +53,6 @@ def main(args):
 
     height=frame.shape[0]
     width=frame.shape[1]
-    fps = int(args.fps[0])
     ms_gap = int(1000/fps)
     print("Time between frames should be in ms: {}".format(ms_gap))
     fourCC = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
@@ -80,7 +85,7 @@ def main(args):
         avg_processing_total_ms = sum(processing_list)/len(processing_list)
         last_time = this_time
         current_date = datetime.now()
-        current_date_str = current_date.strftime("%d-%b-%Y %H:%M%:%S")
+        current_date_str = current_date.strftime("%d-%b-%Y %H:%M:%S")
 
         cv2.rectangle(frame,(30, 10), (200,35), (255,255,255),-1) 
         cv2.putText(frame, current_date_str,  (30,20), cv2. FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0,170,0), 1);
