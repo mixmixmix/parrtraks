@@ -52,42 +52,45 @@ def main(args):
     frameno = 0
     processing_list = []
 
-    with picamera.PiCamera() as camera:
-        camera.start_preview()
-        time.sleep(2)
-        with picamera.array.PiRGBArray(camera) as stream:
-            camera.resolution = (width, height )
-            camera.framerate = fps
-            while brexit == 0:
-                processing_ms = int((time.time() - start) * 1000)
-                left_over_time=max(ms_gap-processing_ms,2)
-                # key = cv2.waitKey(left_over_time)
-                time.sleep(left_over_time/1000)#sleep in seconds
-                start = time.time()
-                camera.capture(stream, format='bgr',  use_video_port=True)
-                frame = stream.array
-                frameno = frameno+1
-                this_time = time.time()
-                processing_total_ms = int((this_time - last_time) * 1000)
-                if len(processing_list) > 10:
-                    processing_list.pop(0)
-                processing_list.append(processing_total_ms)
-                avg_processing_total_ms = sum(processing_list)/len(processing_list)
-                last_time = this_time
-                current_date = datetime.now()
-                current_date_str = current_date.strftime("%d-%b-%Y %H:%M:%S")
+    camera = picamera.PiCamera()
+    camera.resolution = (width, height)
+    camera.framerate = fps
+    stream = picamera.array.PiRGBArray(camera, size=camera.resolution)
 
-                cv2.rectangle(frame,(30, 10), (200,35), (255,255,255),-1) 
-                cv2.putText(frame, current_date_str,  (30,20), cv2. FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0,170,0), 1);
-                cv2.putText(frame, str(left_over_time) ,  (30,30), cv2. FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0,1,124), 1);
-                cv2.putText(frame, "frame: "+ str(frameno) ,  (120,30), cv2. FONT_HERSHEY_COMPLEX_SMALL, 0.5, (222,1,22), 1);
-                cv2.putText(frame, "FPS: "+ str(int(1000/avg_processing_total_ms)) ,  (50,30), cv2. FONT_HERSHEY_COMPLEX_SMALL, 0.5, (222,1,22), 1);
-                if args.visual:
-                    key = cv2.waitKey(1)
-                    cv2.imshow("preview", frame)
-                out.write(frame)
-                stream.truncate()
-                stream.seek(0)
+    time.sleep(2)
+    left_over_time = -12345
+
+    #capture continuous is a bloody generator...
+    for frame in camera.capture_continuous(stream, format='bgr',  use_video_port=True):
+        image = frame.array
+        frameno = frameno+1
+        this_time = time.time()
+        processing_total_ms = int((this_time - last_time) * 1000)
+        if len(processing_list) > 10:
+            processing_list.pop(0)
+        processing_list.append(processing_total_ms)
+        avg_processing_total_ms = sum(processing_list)/len(processing_list)
+        last_time = this_time
+        current_date = datetime.now()
+        current_date_str = current_date.strftime("%d-%b-%Y %H:%M:%S")
+
+        cv2.rectangle(image,(30, 10), (200,35), (255,255,255),-1) 
+        cv2.putText(image, current_date_str,  (30,20), cv2. FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0,170,0), 1);
+        cv2.putText(image, str(left_over_time) ,  (30,30), cv2. FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0,1,124), 1);
+        cv2.putText(image, "frame: "+ str(frameno) ,  (120,30), cv2. FONT_HERSHEY_COMPLEX_SMALL, 0.5, (222,1,22), 1);
+        cv2.putText(image, "FPS: "+ str(int(1000/avg_processing_total_ms)) ,  (50,30), cv2. FONT_HERSHEY_COMPLEX_SMALL, 0.5, (222,1,22), 1);
+        if args.visual:
+            key = cv2.waitKey(1)
+            cv2.imshow("preview", image)
+        out.write(image)
+        stream.truncate(0)
+        if brexit == 1:
+            break
+        processing_ms = int((time.time() - start) * 1000)
+        left_over_time=max(ms_gap-processing_ms,2)
+        # key = cv2.waitKey(left_over_time)
+        time.sleep(left_over_time/1000)#sleep in seconds
+        start = time.time()
 
     if args.visual:
         cv2.destroyWindow("preview")
