@@ -2,7 +2,6 @@
 This program reads and displays my recording from phase 2 experiments (group size migration with constant flow)
 Assumptions:
 - recordings done at 10fps
-
 """
 import signal
 import cv2, yaml
@@ -42,11 +41,18 @@ def signal_handler(sig, frame):
 
 
 def main(args):
-    signal.signal(signal.SIGINT, signal_handler)
-    cv2.namedWindow('frame', cv2.WINDOW_GUI_EXPANDED)
-    cv2.moveWindow('frame', 20,20)
-    cv2.namedWindow('fg', cv2.WINDOW_GUI_EXPANDED)
-    cv2.moveWindow('fg', 20,20)
+    signal.signal(signal.SIGINT, signal_handler) #allow Ctr+C to end program with saving
+
+    if args.visual:
+        cv2.namedWindow('frame', cv2.WINDOW_GUI_EXPANDED)
+        cv2.moveWindow('frame', 20,20)
+        cv2.namedWindow('fg', cv2.WINDOW_GUI_EXPANDED)
+        cv2.moveWindow('fg', 20,20)
+        #Output save video
+        cv2.namedWindow('outvid', cv2.WINDOW_GUI_EXPANDED)
+        cv2.moveWindow('outvid', 20,20)
+
+
 
     fgbg = cv2.bgsegm.createBackgroundSubtractorMOG()
     # fgbg = cv2.bgsegm.createBackgroundSubtractorCNT()
@@ -62,8 +68,8 @@ def main(args):
     print(fname)
     start_date = ripFname(fname)
     current_date = start_date
-    ctime = current_date.strftime("%I:%M%:%Sp")
-    fps = 8
+    ctime = current_date.strftime("%I:%M%:%S")
+    fps = 10
 
 
 
@@ -87,8 +93,10 @@ def main(args):
     w = frame.shape[1]
     h = frame.shape[0]
 
-    print("Image shape is ")
-    print(frame.shape)
+    if args.output[0] != "":
+        fourCC = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+        S = (int(w),2*int(h))
+        out = cv2.VideoWriter(args.output[0]+".avi", fourCC, fps, S, True)
 
     noPixels = h * w
     movement = []
@@ -102,11 +110,14 @@ def main(args):
             iterator=iterator+1
             fgmask = fgbg.apply(frame)
             current_date = current_date + timedelta(seconds=(1/fps))
-            ctime = current_date.strftime("%I:%M%:%Sp")
+            ctime = current_date.strftime("%I:%M%:%S")
+            ones = cv2.countNonZero(fgmask)
+            coverage = 100 * (ones/noPixels)
+            cover_str = "{0:.2f}".format(coverage)
             # Display the resulting frame
             if args.visual:
+                #(x,y)
                 cv2.imshow('fg',fgmask)
-                cv2.putText(frame, ctime,  (30,30), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8, (200,200,250), 1);
                 cv2.imshow('frame', frame)
                 key = cv2.waitKey(int(1000/fps))
                 if key == ord('q'):
@@ -118,14 +129,25 @@ def main(args):
                     sys.stdout.write('.')
                     sys.stdout.flush()
 
-            ones = cv2.countNonZero(fgmask)
-            coverage = 100 * (ones/noPixels)
             # print("{0} : {1:.2f} ".format(ctime, coverage ))
             movement.append([ctime,coverage])
             sys.stdout.write('\r')
             sys.stdout.write("[%-20s] %d%% %d/%d" %
                                 ('=' * int(20 * i / float(fcount)),
                                  int(100.0 * i / float(fcount)), i, fcount))
+
+            fgmask_tricolor = cv2.cvtColor(fgmask, cv2.COLOR_GRAY2BGR)
+            cv2.putText(fgmask_tricolor, cover_str,  (40,100), cv2. FONT_HERSHEY_SCRIPT_COMPLEX, 2.6, (0,240,240), 1);
+            cv2.putText(fgmask_tricolor, "[% of foreground pixels]",  (20,140), cv2. FONT_HERSHEY_COMPLEX_SMALL, 0.8, (0,240,240), 1);
+            cv2.putText(frame, ctime,  (30,60), cv2. FONT_HERSHEY_COMPLEX_SMALL, 2.0, (0,170,0), 2);
+            img_pair = np.concatenate((frame, fgmask_tricolor), axis=0)
+            if args.visual:
+                cv2.imshow('outvid',img_pair)
+                if args.output[0]!="":
+                    out.write(img_pair)
+
+
+
             #depressedKey = cv2.waitKey(1000//fps)
             # depressedKey = cv2.waitKey(40)
             # if depressedKey == 'q':
