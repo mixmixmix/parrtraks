@@ -2,6 +2,7 @@
 This program records from camera. More details: run program without arguments
 """
 import time
+import socket
 import signal
 import sys, argparse
 import numpy as np
@@ -28,6 +29,7 @@ def main(args):
     fps = int(args.fps[0])
     width = 1280
     height = 720
+    hostname = socket.gethostname()
 
     camera = picamera.PiCamera(resolution=(width, height), framerate=fps)
     # camera.start_preview()
@@ -37,8 +39,7 @@ def main(args):
     current_date = datetime.now()
     current_date_str = current_date.strftime("-%d%b-%Y-%H%M%S")
 
-    # camera.start_recording(name_seed+current_date_str+'_stream.h264',quality=1)
-    camera.start_recording('TTT.h264',quality=1)
+    camera.start_recording(name_seed+current_date_str+'_stream_' + hostname + '.h264',quality=10)
 
     while brexit == 0:
         current_date = datetime.now()
