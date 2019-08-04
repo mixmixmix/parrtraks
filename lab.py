@@ -11,6 +11,13 @@ def signal_handler(sig, frame):
         brexit = 1
         print('We shall now attempt to exit...')
 
+def dounecount():
+        does = ["3...", "2...", "1...", "OFF", "3...", "2...", "1...", "ON"]
+        for d in does:
+                sys.stdout.write(d)
+                time.sleep(1)
+                sys.stdout.flush()
+
 def main(args):
     signal.signal(signal.SIGINT, signal_handler) #allow Ctr+C to end program with saving
 
@@ -32,6 +39,10 @@ def main(args):
         i = i+1
         mycomment = input(action_type_str)
         print_time = datetime.now().strftime('%Y%b%d_%H:%M:%S')
+        if action_type_str =="Flow Clockwise (1)" or action_type_str == "Flow Counterclockwise (2)":
+                dounecount()
+        # print("sholuld +6 ")
+        # print(datetime.now().strftime('%Y%b%d_%H:%M:%S'))
         with open(outputfilename, 'a') as f:
             datme = print_time + ', ' + action_type_str + ', ' + mycomment
             print(datme)
