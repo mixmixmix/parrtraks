@@ -34,8 +34,10 @@ def main(args):
 
     i = 0
     actions = ["Flow Clockwise (1)", "Fish Out", "Fish In", "Flow Counterclockwise (2)", "Fish Out", "Fish In"]
+    waits = [20, 6, 1, 20, 6, 1]
     while not brexit:
         action_type_str = actions[i%len(actions)]
+        time.sleep(waits[i%len(waits)]*60)
         i = i+1
         mycomment = input(action_type_str)
         print_time = datetime.now().strftime('%Y%b%d_%H:%M:%S')
