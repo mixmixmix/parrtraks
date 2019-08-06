@@ -12,11 +12,11 @@ def signal_handler(sig, frame):
         print('We shall now attempt to exit...')
 
 def dounecount():
-        does = ["3...", "2...", "1...", "OFF", "3...", "2...", "1...", "ON"]
+        does = ["5...","4...","3...", "2...", "1...", "OFF", "5...","4...","3...", "2...", "1...", "ON"]
         for d in does:
                 sys.stdout.write(d)
-                time.sleep(1)
                 sys.stdout.flush()
+                time.sleep(1)
 
 def main(args):
     signal.signal(signal.SIGINT, signal_handler) #allow Ctr+C to end program with saving
@@ -33,11 +33,11 @@ def main(args):
 
 
     i = 0
-    actions = ["Flow Clockwise (1)", "Fish Out", "Fish In", "Flow Counterclockwise (2)", "Fish Out", "Fish In"]
-    waits = [20, 6, 1, 20, 6, 1]
+    actions = ["Flow Clockwise (1)", "Fish Out (Press ENTER before entering the room)", "Fish In (press ENTER after exiting the room)", "Flow Counterclockwise (2)", "Fish Out (Press ENTER before entering the room)", "Fish In (press ENTER after exiting the room)"]
     while not brexit:
         action_type_str = actions[i%len(actions)]
-        time.sleep(waits[i%len(waits)]*60)
+        if action_type_str =="Flow Clockwise (1)" or action_type_str == "Flow Counterclockwise (2)":
+                print("Press ENTER to start a countdown!")
         i = i+1
         mycomment = input(action_type_str)
         print_time = datetime.now().strftime('%Y%b%d_%H:%M:%S')
