@@ -9,6 +9,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import picamera
 import datetime as dt
+import io
 
 brexit = 0
 def signal_handler(sig, frame):
