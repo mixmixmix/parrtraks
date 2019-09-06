@@ -27,7 +27,7 @@ class MePipe(object):
         def write(self, buf):
                 self.frameout.write(buf)
                 self.timeout.write(str(self.frameno) + ', ' + datetime.now().strftime("%H%M%S%f")+'\n')
-                self.fameno = self.frameno + 1
+                self.frameno = self.frameno + 1
 
 def main(args):
     signal.signal(signal.SIGINT, signal_handler) #allow Ctr+C to end program with saving
