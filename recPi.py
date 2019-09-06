@@ -17,8 +17,8 @@ def signal_handler(sig, frame):
         brexit = 1
         print('We shall now attempt to exit...')
 
-class MePipe(fname):
-        def __init__(self):
+class MePipe(object):
+        def __init__(self, fname):
                 self.frameout = io.open(fname + '.h264','wb')
                 self.timeout = io.open(fname + '.txt','w')
                 self.frameno = 0
