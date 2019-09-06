@@ -26,7 +26,7 @@ class MePipe(object):
 
         def write(self, buf):
                 self.frameout.write(buf)
-                self.timeout.write(self.frameno + ', ' + datetime.now().strftime("%H%M%S%f")+'\n')
+                self.timeout.write(to_str(self.frameno) + ', ' + datetime.now().strftime("%H%M%S%f")+'\n')
                 self.fameno = self.frameno + 1
 
 def main(args):
