@@ -17,6 +17,16 @@ def signal_handler(sig, frame):
         brexit = 1
         print('We shall now attempt to exit...')
 
+class MePipe(fname):
+        def __init__(self):
+                self.frameout = io.open(fname + '.h264','wb')
+                self.timeout = io.open(fname + '.txt','w')
+                self.frameno = 0
+
+        def write(self, buf):
+                self.frameout.write(buf)
+                self.timeout.write(datetime.now().strftime("%H%M%S")+'\n')
+
 def main(args):
     signal.signal(signal.SIGINT, signal_handler) #allow Ctr+C to end program with saving
 
@@ -39,7 +49,8 @@ def main(args):
     current_date = datetime.now()
     current_date_str = current_date.strftime("-%d%b-%Y-%H%M%S")
     camera.start_preview() # for debugging
-    camera.start_recording(name_seed+current_date_str+'_stream_' + hostname + '.h264',quality=10)
+    outputpipe = MePipe(name_seed+current_date_str+'_stream_' + hostname + '.h264')
+    camera.start_recording(outputpipe,quality=10)
 
     while brexit == 0:
         current_date = datetime.now()
