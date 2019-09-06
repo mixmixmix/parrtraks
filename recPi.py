@@ -38,7 +38,7 @@ def main(args):
 
     current_date = datetime.now()
     current_date_str = current_date.strftime("-%d%b-%Y-%H%M%S")
-
+    camera.start_preview() # for debugging
     camera.start_recording(name_seed+current_date_str+'_stream_' + hostname + '.h264',quality=10)
 
     while brexit == 0:
