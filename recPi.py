@@ -39,6 +39,7 @@ def main(args):
     print("Name seed is {}".format(name_seed))
 
     fps = int(args.fps[0])
+    qual = int(args.quality[0])
     width = 1280
     height = 720
     hostname = socket.gethostname()
@@ -51,8 +52,8 @@ def main(args):
     current_date = datetime.now()
     current_date_str = current_date.strftime("-%d%b-%Y-%H%M%S")
     camera.start_preview() # for debugging
-    outputpipe = MePipe(name_seed+current_date_str+'_stream_' + hostname + '.h264')
-    camera.start_recording(outputpipe,quality=10,format='h264')
+    outputpipe = MePipe(name_seed+current_date_str+'_stream_'+ str(fps) + 'fps_' + str(qual) + 'qual_' + hostname)
+    camera.start_recording(outputpipe,quality=qual,format='h264')
 
     while brexit == 0:
         current_date = datetime.now()
@@ -74,6 +75,8 @@ if __name__ == '__main__':
         '--output', '-o', required=False, nargs=1, help='Seed for output file name. A lot will be added to it...')
     parser.add_argument(
         '--fps', '-f', required=True, nargs=1, help='Recording framerate')
+    parser.add_argument(
+        '--quality', '-q', required=True, nargs=1, help='Recording quality')
 
     args = parser.parse_args()
     main(args)
