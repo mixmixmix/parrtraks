@@ -25,16 +25,25 @@ def byfactor(v,factor):
     dvy = v[3]-v[1]
     dvfx = factor * dvx
     dvfy = factor * dvy
-    incx= (dvfx-dvx)/2
-    incy= (dvfy-dvy)/2
+    boxwidth = max(dvfy,dvfx)
+    incx= (boxwidth-dvx)/2
+    incy= (boxwidth-dvy)/2
     return (v[0]-incx,v[1]-incy,v[2]+incx,v[3]+incy)
 
+def constframe(v,framesize):
+    cvx = v[2] - (v[2]-v[0])/2
+    cvy = v[3] - (v[3]-v[1])/2
+    inc= (framesize)/2
+    return (cvx-inc,cvy-inc,cvx+inc,cvy+inc)
 
 def main(args):
     global brexit
     signal.signal(signal.SIGINT, signal_handler) #allow Ctr+C to end program with saving
 
     fourCC = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+    S = (160,160)
+    framesize = 160
+    outwriters = dict()
 
     if args.visual:
         cv2.namedWindow('frame', cv2.WINDOW_GUI_EXPANDED)
@@ -106,7 +115,8 @@ def main(args):
             #show bboxez
             for k in tracks:
                 v=tracks[k]
-                v=byfactor(v,3)
+                # v=byfactor(v,3)
+                # v=constframe(v,framesize)
                 full_warp = save_warp[iterator]
                 try:
                     inv_warp = np.linalg.inv(full_warp)
@@ -132,19 +142,27 @@ def main(args):
                 r = np.random.randint(256)
                 g = np.random.randint(256)
                 b = np.random.randint(256)
-                cv2.rectangle(frame, (int(minx), int(miny)),
-                                (int(maxx), int(maxy)), (r, g, b), 4)
+                (minx,miny,maxx,maxy)=constframe((minx,miny,maxx,maxy),framesize)
+                #(minx,miny,maxx,maxy)=byfactor((minx,miny,maxx,maxy),3)
+                # print("{},{},{},{}".format(minx,miny,maxx,maxy))
+                cv2.rectangle(frame, (int(minx)-4, int(miny)-4),
+                                (int(maxx)+4, int(maxy)+4), (r, g, b), 4)
                 cv2.putText(frame, str(k),
                             (int(minx) - 5, int(miny) - 5), 0,
                             5e-3 * 200, (r, g, b), 2)
+
+                #write to a file
+                if k not in outwriters:
+                    outwriters[k] = cv2.VideoWriter(args.output[0]+"/"+str(k)+".avi", fourCC, fps, S, True)
+                crop_img = frame[int(miny):int(maxy),int(minx):int(maxx)]
+                sized_img = cv2.resize(crop_img,S)
+                outwriters[k].write(sized_img)
+
             if args.visual:
                 #(x,y)
                 cv2.imshow('frame', frame)
                 key = cv2.waitKey(int(1000/fps))
 
-        #WRITING TO A FILE. I need to resize to a common size everytime
-        # S = (int(w),2*int(h))
-        # out = cv2.VideoWriter(args.output[0]+"/"+str(k)+".avi", fourCC, fps, S, True)
 
             tracks = dict()
         else:
@@ -157,8 +175,8 @@ def main(args):
     # Closes all the frames
     cv2.destroyAllWindows()
 
-    with open(args.output[0], 'w') as handle:
-        yaml.dump(movement, handle)
+    for w in outwriters:
+        outwriters[w].release()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
