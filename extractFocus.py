@@ -42,7 +42,7 @@ def main(args):
 
     fourCC = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
     S = (160,160)
-    framesize = 160
+    framesize = 80
     outwriters = dict()
 
     if args.visual:
@@ -104,6 +104,8 @@ def main(args):
         elif currentTrackFrame == iterator: 
             while True:
                 lineit = lineit + 1
+                if lineit >= len(lines):
+                        break
                 ctrack = lines[lineit].split(",")
                 if int(ctrack[0]) != currentTrackFrame:
                     currentTrackFrame = int(ctrack[0])
@@ -113,6 +115,7 @@ def main(args):
                     #x1,y1 x2,y2
 
             #show bboxez
+            dispframe = frame.copy()
             for k in tracks:
                 v=tracks[k]
                 # v=byfactor(v,3)
@@ -139,15 +142,16 @@ def main(args):
                                                     iwarp)[0, 0, :]
                 maxx = corner2[0]
                 maxy = corner2[1]
-                r = np.random.randint(256)
-                g = np.random.randint(256)
-                b = np.random.randint(256)
+                # r = np.random.randint(256)
+                r = 255
+                g = 255
+                b = 233
                 (minx,miny,maxx,maxy)=constframe((minx,miny,maxx,maxy),framesize)
                 #(minx,miny,maxx,maxy)=byfactor((minx,miny,maxx,maxy),3)
                 # print("{},{},{},{}".format(minx,miny,maxx,maxy))
-                cv2.rectangle(frame, (int(minx)-4, int(miny)-4),
+                cv2.rectangle(dispframe, (int(minx)-4, int(miny)-4),
                                 (int(maxx)+4, int(maxy)+4), (r, g, b), 4)
-                cv2.putText(frame, str(k),
+                cv2.putText(dispframe, str(k),
                             (int(minx) - 5, int(miny) - 5), 0,
                             5e-3 * 200, (r, g, b), 2)
 
@@ -155,12 +159,13 @@ def main(args):
                 if k not in outwriters:
                     outwriters[k] = cv2.VideoWriter(args.output[0]+"/"+str(k)+".avi", fourCC, fps, S, True)
                 crop_img = frame[int(miny):int(maxy),int(minx):int(maxx)]
-                sized_img = cv2.resize(crop_img,S)
-                outwriters[k].write(sized_img)
+                if crop_img.size > 0:
+                        sized_img = cv2.resize(crop_img,S)
+                        outwriters[k].write(sized_img)
 
             if args.visual:
                 #(x,y)
-                cv2.imshow('frame', frame)
+                cv2.imshow('frame', dispframe)
                 key = cv2.waitKey(int(1000/fps))
 
 
