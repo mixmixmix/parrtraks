@@ -52,7 +52,7 @@ def main(args):
     current_date = datetime.now()
     current_date_str = current_date.strftime("-%d%b-%Y-%H%M%S")
     camera.start_preview() # for debugging
-    outputpipe = MePipe(name_seed+current_date_str+'_stream_'+ str(fps) + 'fps_' + str(qual) + 'qual_' + hostname)
+    outputpipe = MePipe(name_seed + '_' + hostname + '_' + current_date_str+'_stream_'+ str(fps) + 'fps_' + str(qual) + 'qual')
     camera.start_recording(outputpipe,quality=qual,format='h264')
 
     while brexit == 0:
