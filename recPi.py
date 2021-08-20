@@ -9,6 +9,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import picamera
 import datetime as dt
+import io
 
 brexit = 0
 def signal_handler(sig, frame):
@@ -16,6 +17,17 @@ def signal_handler(sig, frame):
         print('You pressed Ctrl+C!')
         brexit = 1
         print('We shall now attempt to exit...')
+
+class MePipe(object):
+        def __init__(self, fname):
+                self.frameout = io.open(fname + '.h264','wb')
+                self.timeout = io.open(fname + '.txt','w')
+                self.frameno = 0
+
+        def write(self, buf):
+                self.frameout.write(buf)
+                self.timeout.write(str(self.frameno) + ', ' + datetime.now().strftime("%H%M%S%f")+'\n')
+                self.frameno = self.frameno + 1
 
 def main(args):
     signal.signal(signal.SIGINT, signal_handler) #allow Ctr+C to end program with saving
@@ -27,6 +39,7 @@ def main(args):
     print("Name seed is {}".format(name_seed))
 
     fps = int(args.fps[0])
+    qual = int(args.quality[0])
     width = 1280
     height = 720
     hostname = socket.gethostname()
@@ -38,8 +51,9 @@ def main(args):
 
     current_date = datetime.now()
     current_date_str = current_date.strftime("-%d%b-%Y-%H%M%S")
-
-    camera.start_recording(name_seed+current_date_str+'_stream_' + hostname + '.h264',quality=10)
+    camera.start_preview() # for debugging
+    outputpipe = MePipe(name_seed + '_' + hostname + '_' + current_date_str+'_stream_'+ str(fps) + 'fps_' + str(qual) + 'qual')
+    camera.start_recording(outputpipe,quality=qual,format='h264')
 
     while brexit == 0:
         current_date = datetime.now()
@@ -61,6 +75,8 @@ if __name__ == '__main__':
         '--output', '-o', required=False, nargs=1, help='Seed for output file name. A lot will be added to it...')
     parser.add_argument(
         '--fps', '-f', required=True, nargs=1, help='Recording framerate')
+    parser.add_argument(
+        '--quality', '-q', required=True, nargs=1, help='Recording quality')
 
     args = parser.parse_args()
     main(args)
